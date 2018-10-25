@@ -5,7 +5,11 @@ jobs/
 .cache
 *.retry
 ansible/vault-password
+ansible/hosts/runners_devel
 
 # Python
 *.py[cod]
 __pycache__/
+
+# Emacs
+*~

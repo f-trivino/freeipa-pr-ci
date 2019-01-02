@@ -1,11 +1,11 @@
 # FreeIPA PR CI Developer Documentation
-
+THIS NEEDS TO BE UPDATED
 ## PR scheduler
 
 ### Overview
 
-With the PR CI, a suite of tests is launched when a Pull Request is opened 
-against freeipa github repository, but this test suite contains only a 
+With the PR CI, a suite of tests is launched when a Pull Request is opened
+against freeipa github repository, but this test suite contains only a
 selection among all the tests available in `ipatests/` directory (the
 full suite would take too long to execute on each PR).
 
@@ -18,13 +18,13 @@ The PR CI runners then detect the PR and launch the test suite defined in
 `.freeipa-pr-ci.yaml` file.
 
 The python script can be regularly launched with a cron job. In order to
-easily install the script and configure cron on the scheduler machine, 
+easily install the script and configure cron on the scheduler machine,
 the Ansible playbook `ansible/prepare_openclose_pr_tool.yml` is also
 provided in this repository.
 
 This document describes both aspects of the project:
 * the python script responsible for the PR creation
-* the ansible playbook responsible for the installation and configuration 
+* the ansible playbook responsible for the installation and configuration
 of the script on a scheduler machine
 
 ### openclose_pr script
@@ -139,7 +139,7 @@ github_token, prci_config, git_sshkey, pr_against_upstream)
   * creation of the configuration file `/root/openclose_pr/config.yaml`
 containing repo info and credentials
   * installation of the python script in `/root/openclose_pr/openclose_pr.py`
-  * linking of the test definition file 
+  * linking of the test definition file
 `/root/openclose_pr/.freeipa-pr-ci.yaml` to $prci_config
   * preparation of ssh configuration in order to access github.com
   * creation of a clone repo from $repo_owner/freeipa.git to
@@ -153,4 +153,3 @@ with cron job starting at 23:45 every monday, wednesday and friday.
 The scheduler is opening PRs against the master branch, with a test
 definition file customized for Fedora 28. The repo_owner is the github user
 `freeipa-pr-ci`.
-

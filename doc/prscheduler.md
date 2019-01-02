@@ -1,33 +1,42 @@
 # FreeIPA PR CI Developer Documentation
 
-## PR scheduler
+## PR Scheduler Tool
 
 ### Overview
 
-With the PR CI, a suite of tests is launched when a Pull Request is opened 
-against freeipa github repository, but this test suite contains only a 
+With the PR-CI, a suite of tests is launched when a Pull Request is opened
+against freeipa github repository, but this test suite contains only a
 selection among all the tests available in `ipatests/` directory (the
 full suite would take too long to execute on each PR).
 
 However, the team wants to run the full test suite regularly, in an automated
 way. The PR scheduler tool is allowing this scheduling of nightly PRs. It
-consists in a python script `openclose_pr.py` which creates a PR in a
-github repository, changing the `.freeipa-pr-ci.yaml` file to point to a
-different test definition file.
-The PR CI runners then detect the PR and launch the test suite defined in
-`.freeipa-pr-ci.yaml` file.
+consists in a python script `open_close_pr.py` which creates a PR in a github
+repository, changing the `.freeipa-pr-ci.yaml` file to point to a different
+test definition file. The PR-CI runners then detect the PR and launch the test
+suite defined in `.freeipa-pr-ci.yaml` file.
+
+In addition, PR-CI uses pre-defined templates for gating/nightly. This is good
+because it makes the process more stable by avoiding repeating unnecessary
+steps. However, it is convenient to trigger some nightly flows running with
+latest packages so the CI can catch bugs from a newer version of IPA
+dependencies.
+
+Hence, PR scheduler tool is also used to automatically upgrade vagrant
+templates by sending weekly PR. The new templates will be later used by the
+corresponding nightly flows.
 
 The python script can be regularly launched with a cron job. In order to
-easily install the script and configure cron on the scheduler machine, 
+easily install the script and configure cron on the scheduler machine,
 the Ansible playbook `ansible/prepare_openclose_pr_tool.yml` is also
 provided in this repository.
 
 This document describes both aspects of the project:
 * the python script responsible for the PR creation
-* the ansible playbook responsible for the installation and configuration 
+* the ansible playbook responsible for the installation and configuration
 of the script on a scheduler machine
 
-### openclose_pr script
+### open_close_pr script
 
 This script is automating the creation of a dummy pull request against
 the official freeipa upstream repository. It is launched on a machine called
@@ -58,7 +67,7 @@ depending on the value $pr_against_upstream
 
 The script usage is the following:
 ```
-python3 openclose_pr.py \
+python3 open_close_pr.py \
     [--config config.yml]\
     [--id identifier] \
     [--repo_path freeipa_repo_path] \
@@ -68,13 +77,14 @@ python3 openclose_pr.py \
     cmd
 ```
 
-Currently, only the `open_pr` cmd is supported.
+Currently, `open_template_pr` and `open_nightly_pr` cmds are supported.
 
 The arguments can be explained with the following picture, showing
 the resulting PR opened by the script:
 ![open_close_pr.jpg](images/open_close_pr.jpg)
 
-* config.yml is a configuration file which must contain the following information:
+* config.yml is a configuration file which must contain the following
+information:
 ```
 # cat config.yml
 repository:
@@ -109,12 +119,15 @@ The playbook will prompt you for variables:
 ```
 # ansible-playbook -i ansible/hosts/runners ansible/prepare_openclose_pr_tool.yml
 Provide an unique identifier for the PR: testing_master    # $identifier
-Branch name to open PR against it: master                  # $branch
+Flow name to identify the nightly template: ci or pki      # $flow
 Repo owner to create branches: freeipa-pr-ci               # $repo_owner
 GitHub token: 123qwerty                                    # $github_token
 Provide the path to a test definition file to use it to open new PRs. For example: ipatests/prci_definition/gating	# $prci_config, for instance ipatests/prci_definition/nightly_master.yaml
 Provide a ssh key that has push access to the git repo: ~/path/to/ssh_key #$git_sshkey
 Should the PR be open against the upstream repo?. Type no for opening it agaist your own freeipa repo (yes/no): no
+Provide PRCI test definitions folder E.g. ipatests/prci_definition # $prci_def_dir
+Provide Fedora version (int) for template creation. E.g. 29 # $fedora_ver
+Provide Vagrant atlas token for uploading boxes # $vagrant_atlas_token
 ```
 
 You can run the ansible playbook multiple times to schedule multiple PRs,
@@ -129,17 +142,19 @@ The playbook is performing multiple tasks in order to install and configure
 the python script:
 * installation of python and deps for ansible modules (python2, python2-dnf,
 libselinux-python)
-* prompting of required variables (identifier, branch, repo_owner,
-github_token, prci_config, git_sshkey, pr_against_upstream)
-* installation of the role `automation/openclose_pr`:
-  * installation of required packages: python3-github3py, PyYAML, git
-  * installation of python dependencies: CacheControl, gitpython
+* prompting of required variables (identifier, flow, repo_owner,
+github_token, prci_config, git_sshkey, pr_against_upstream, prci_def_dir,
+fedora_ver, vagrant_atlas_token)
+* installation of the role `automation/setup`:
+  * installation of required packages: python3-github3py, PyYAML, git, crontabs,
+  python2-tqdm, ansible, vagrant, libvirt, vagrant-libvirt, rsync
+  * installation of python dependencies: CacheControl, gitpython, ryd
   * creation of the base repository where the tool and config is stored:
 `/root/openclose_pr`
   * creation of the configuration file `/root/openclose_pr/config.yaml`
 containing repo info and credentials
-  * installation of the python script in `/root/openclose_pr/openclose_pr.py`
-  * linking of the test definition file 
+  * installation of the python script in `/root/openclose_pr/open_close_pr.py`
+  * linking of the test definition file
 `/root/openclose_pr/.freeipa-pr-ci.yaml` to $prci_config
   * preparation of ssh configuration in order to access github.com
   * creation of a clone repo from $repo_owner/freeipa.git to
@@ -148,9 +163,15 @@ containing repo info and credentials
 
 #### Current scheduling
 
-Currently we are using a machine called prci-automation in our OpenStack lab,
-with cron job starting at 23:45 every monday, wednesday and friday.
-The scheduler is opening PRs against the master branch, with a test
-definition file customized for Fedora 28. The repo_owner is the github user
-`freeipa-pr-ci`.
+The following represents the current schedule mixing both nightly and
+template generation PRs:
 
+Monday: master
+Tuesday: f28
+Wednesday: master
+Thrusday: f28, template_rawhide, template_pki
+Friday: master
+Saturday: rawhide
+Sunday: ipa-4-7, pki
+
+The repo_owner is the github user `freeipa-pr-ci`.

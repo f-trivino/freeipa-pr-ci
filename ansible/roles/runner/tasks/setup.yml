@@ -45,6 +45,10 @@
   notify:
     - restart_nfs
 
+# FIXME: something is breaking python3-six installation, so reinstallation is required
+- name: force reinstall python3-six
+  raw: dnf reinstall python3-six -y
+
 # as per sssd-suite readme file states, we need vagrant plugins...
 - name: install libvirt plugin for vagrant
   raw: vagrant plugin install vagrant-libvirt

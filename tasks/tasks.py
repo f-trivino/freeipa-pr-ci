@@ -75,12 +75,6 @@ class JobTask(FallibleTask):
         # Create a hostname file for debugging purposes
         self.write_hostname_to_file()
 
-        # Prepare files for vagrant ftrivino
-        rubyfolder = self.data_dir
-        rubyfolder += "/ruby"
-        shutil.copytree(constants.VAGRANT_RUBY, rubyfolder)
-        shutil.copy(constants.VAGRANT_CONFIG, self.data_dir)
-
         # Prepare files for vagrant
         try:
             shutil.copy(constants.ANSIBLE_CFG_FILE, self.data_dir)
@@ -272,7 +266,7 @@ class RunPytest(JobTask):
             logging.critical(msg)
             raise exc
 
-    @with_vagrant_ad
+    @with_vagrant
     def _run(self):
         try:
             self.execute_tests()
@@ -338,3 +332,17 @@ class RunWebuiTests(RunPytest):
         logging.error(
             '>>>>>> WEBUI TESTS FAILED (error code: {code}) <<<<<<'.format(
                 code=self.returncode))
+
+
+class RunADTests(RunPytest):
+    def _before(self):
+        # Prepare files for vagrant ftrivino
+        rubyfolder = self.data_dir
+        rubyfolder += "/ruby"
+        shutil.copytree(constants.VAGRANT_RUBY, rubyfolder)
+        shutil.copy(constants.VAGRANT_CONFIG, self.data_dir)
+        super()._before()
+
+    @with_vagrant_ad
+    def _run(self):
+        super()._run()

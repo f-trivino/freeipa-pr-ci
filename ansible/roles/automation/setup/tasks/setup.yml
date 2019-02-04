@@ -95,3 +95,13 @@
 - name: rename remote origin to mygithub
   shell: "cd {{ basedir }}/freeipa; git remote rename origin mygithub"
   ignore_errors: True
+
+
+- name: start&enable libvirt services
+  service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - virtlogd
+    - libvirtd

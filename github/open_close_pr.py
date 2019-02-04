@@ -130,6 +130,7 @@ class AutomatedPR(object):
                     playbook_path,
                     '-e', 'fedora_version={}'.format(self.args.fedora_ver),
                     '-e', 'git_branch={}'.format(self.args.branch),
+                    '-e', 'flow={}'.format(self.args.flow),
                 ], cwd=self.args.prci_repo_path)
             return res.decode()
         except subprocess.CalledProcessError:

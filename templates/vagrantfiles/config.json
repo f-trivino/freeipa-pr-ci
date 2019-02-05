@@ -1,0 +1,42 @@
+{
+  "boxes": {
+    "ad": {
+      "name": "sssd-winsrv2016-ad",
+      "url": "http://download.eng.brq.redhat.com/archive/sssd/vagrant/sssd-winsrv2016-ad-20181009.01.box",
+      "memory": 1024
+    },
+    "ad-child": {
+      "name": "sssd-winsrv2016-ad-child",
+      "url": "http://download.eng.brq.redhat.com/archive/sssd/vagrant/sssd-winsrv2016-ad-child-20181009.01.box",
+      "memory": 1024
+    },
+    "ipa": {
+      "name": "{{ vagrant_template_name }}",
+      "url": "",
+      "version": "{{ vagrant_template_version }}",
+      "memory": 2048
+    },
+    "ldap": {
+      "name": "{{ vagrant_template_name }}",
+      "url": "",
+      "version": "{{ vagrant_template_version }}",
+      "memory": 1024
+    },
+    "client": {
+      "name": "{{ vagrant_template_name }}",
+      "url": "",
+      "version": "{{ vagrant_template_version }}",
+      "memory": 2048
+    }
+  },
+  "folders": {
+    "sshfs": [
+      {
+        "host": "./",
+        "guest": "/vagrant"
+      }
+    ],
+    "rsync": [],
+    "nfs": []
+  }
+}

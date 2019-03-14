@@ -29,22 +29,22 @@ Vagrant.configure(2) do |config|
         domain.volume_cache = "unsafe"
     end
 
-    config.vm.provision :ansible do |ansible|
-        # Disable default limit to connect to all the machines
-        ansible.limit = "all"
-        ansible.playbook = "../../ansible/provision_ad.yml"
-        ansible.extra_vars = "vars.yml"
-        ansible.host_vars = {
-            "ad" => {"ansible_winrm_server_cert_validation" => "ignore"},
-            "ad-child" => {"ansible_winrm_server_cert_validation" => "ignore"}
-        }
-    end
-
     config.vm.define "controller" , primary: true do |controller|
         controller.vm.network "private_network", ip: "192.168.100.20"
         controller.vm.provider "libvirt" do |domain,override|
             # Less resources needed for controller
             domain.memory = 950
+        end
+
+        controller.vm.provision :ansible do |ansible|
+            # Disable default limit to connect to all the machines
+            ansible.limit = "all"
+            ansible.playbook = "../../ansible/provision_ad.yml"
+            ansible.extra_vars = "vars.yml"
+            ansible.host_vars = {
+                "ad" => {"ansible_winrm_server_cert_validation" => "ignore"},
+                "ad-child" => {"ansible_winrm_server_cert_validation" => "ignore"}
+            }
         end
     end
 

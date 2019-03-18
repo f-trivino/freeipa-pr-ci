@@ -26,17 +26,19 @@ domains:
 {% endfor %}
   name: ipa.test
   type: IPA
+{% if groups['all']|select('startswith', 'ad') %}
 - hosts:
     - external_hostname: ad.vm
-      ip: 192.168.100.110
+      ip: {{ hostvars['ad']['ansible_ip_addresses']|ipv4|first }}
       name: ad.vm
       role: ad
     - external_hostname: child.ad.vm
-      ip: 192.168.100.120
+      ip: {{ hostvars['ad-child']['ansible_ip_addresses']|ipv4|first }}
       name: child.ad.vm
       role: ad_subdomain
   name: ad.vm
   type: AD
+{% endif %}
 nis_domain: ipatest
 ntp_server: 1.pool.ntp.org
 root_ssh_key_filename: /root/.ssh/freeipa_pr_ci_insecure

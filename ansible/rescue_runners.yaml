@@ -1,0 +1,15 @@
+- hosts: runners
+  remote_user: root
+  gather_facts: no
+  tasks:
+  - name: check prci status
+    block:
+      - shell: systemctl is-active --quiet prci && echo prci is running
+        register: out
+      - debug:
+          var=out.stdout_lines
+    rescue:
+      - include_role:
+          name: automation
+          tasks_from: rescue
+

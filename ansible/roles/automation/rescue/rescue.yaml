@@ -1,0 +1,3 @@
+- name: cleanup runner
+  shell: journalctl --vacuum-time=2d
+  shell: python3 /root/freeipa-pr-ci/autocleaner.py --jobs_dir_exp 2
